@@ -1,8 +1,10 @@
+from datetime import UTC, datetime
+
 import pytest
 
 from deal_dashboard.sources.base import OfferSource
 from deal_dashboard.sources.rorys import PAGE_EXTENSIONS, RorysTravelClubSource
-from tests.test_rorys_parser import make_card  # see note below
+from tests.helpers import make_card  # see note below
 
 
 class FakeFetcher:
@@ -57,3 +59,19 @@ def test_fetch_error_propagates() -> None:
 
     with pytest.raises(RuntimeError):
         RorysTravelClubSource(BrokenFetcher()).fetch_offers()
+
+
+def test_all_offers_in_one_run_share_a_timestamp() -> None:
+    urls = ["https://example.test/pages/a", "https://example.test/pages/b"]
+    fetcher = FakeFetcher({urls[0]: make_card(name="A"), urls[1]: make_card(name="B")})
+    ticks = iter(datetime(2026, 10, 18, 12, 0, s, tzinfo=UTC) for s in range(100))
+    source = RorysTravelClubSource(
+        fetcher,
+        base_url="https://example.test/pages/start",
+        extensions=("a", "b"),
+        clock=lambda: next(ticks),  # a clock that changes on every call
+    )
+
+    offers = source.fetch_offers()
+
+    assert len({o.scraped_at for o in offers}) == 1

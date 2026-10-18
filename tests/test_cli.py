@@ -1,13 +1,16 @@
-from datetime import UTC, datetime
-from pathlib import Path
+import logging
 
-from deal_dashboard.cli import save_snapshot
+import pytest
+
+from deal_dashboard.cli import report
+from tests.helpers import make_offer  # see note below
 
 
-def test_save_snapshot_writes_timestamped_file(tmp_path: Path) -> None:
-    when = datetime(2026, 10, 14, 12, 30, 5, tzinfo=UTC)
+def test_report_returns_zero_when_offers_found() -> None:
+    assert report([make_offer()]) == 0
 
-    path = save_snapshot("<html>x</html>", tmp_path / "raw", when)
 
-    assert path.name == "rorys_20261014T123005Z.html"
-    assert path.read_text(encoding="utf-8") == "<html>x</html>"
+def test_report_fails_loudly_when_no_offers(caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.ERROR):
+        assert report([]) == 1
+    assert "layout has probably changed" in caplog.text

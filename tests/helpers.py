@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from deal_dashboard.models import RawOffer
 from deal_dashboard.sources.rorys import RorysOfferParser
@@ -33,3 +33,15 @@ def make_card(
 
 def parse(html: str, scraped_at: datetime) -> list[RawOffer]:  # see note below on typing
     return RorysOfferParser().parse(html, scraped_at=scraped_at)
+
+
+def make_offer(**overrides: object) -> RawOffer:
+    fields: dict[str, object] = {
+        "source": "rorys",
+        "name": "Test Hotel",
+        "description": "B&B from €99",
+        "scraped_at": datetime(2026, 10, 14, tzinfo=UTC),
+        "raw_html": "<div></div>",
+    }
+    fields.update(overrides)
+    return RawOffer.model_validate(fields)
