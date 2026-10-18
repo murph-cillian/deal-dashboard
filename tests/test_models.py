@@ -1,21 +1,9 @@
-from datetime import UTC, date, datetime
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
 
-from deal_dashboard.models import RawOffer
-
-
-def make_offer(**overrides: object) -> RawOffer:
-    fields: dict[str, object] = {
-        "source": "rorys",
-        "name": "Test Hotel",
-        "description": "B&B from €99",
-        "scraped_at": datetime(2026, 10, 14, tzinfo=UTC),
-        "raw_html": "<div></div>",
-    }
-    fields.update(overrides)
-    return RawOffer.model_validate(fields)
+from tests.helpers import make_offer  # see note below
 
 
 def test_raw_offer_applies_defaults() -> None:

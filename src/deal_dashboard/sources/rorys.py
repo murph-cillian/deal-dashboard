@@ -5,6 +5,7 @@ like. When the site changes its layout, this block is what you edit.
 """
 
 import logging
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from urllib.parse import urljoin
 
@@ -64,6 +65,10 @@ def _parse_iso_date(value: str | None) -> date | None:
         return None
 
 
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
 class RorysOfferParser:
     """Turns the offers page HTML into ``RawOffer`` objects. Pure: no network, no clock."""
 
@@ -120,21 +125,26 @@ class RorysTravelClubSource(OfferSource):
         parser: RorysOfferParser | None = None,
         base_url: str = OFFERS_URL,
         extensions: tuple[str, ...] = PAGE_EXTENSIONS,
+        clock: Callable[[], datetime] = _utc_now,
     ) -> None:
         self._fetcher = fetcher
         self._parser = parser or RorysOfferParser()
         self._base_url = base_url
         self._extensions = extensions
+        self._clock = clock
 
     @property
     def name(self) -> str:
         return "rorys"
 
     def fetch_offers(self) -> list[RawOffer]:
+        scraped_at = self._clock()  # one timestamp for the whole run
         offers: list[RawOffer] = []
         for ext in self._extensions:
             page_url = urljoin(self._base_url, ext)
             html = self._fetcher.fetch(page_url)
-            offers.extend(self._parser.parse(html, scraped_at=datetime.now(UTC)))
-
+            page_offers = self._parser.parse(html, scraped_at=scraped_at)
+            if not page_offers:
+                logger.warning("No offers parsed from %s (has the layout changed?)", page_url)
+            offers.extend(page_offers)
         return offers

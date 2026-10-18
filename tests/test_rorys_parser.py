@@ -105,3 +105,17 @@ def test_custom_source_name_is_used(scraped_at: datetime) -> None:
     parser = RorysOfferParser(source_name="other", base_url=OFFERS_URL)
     (offer,) = parser.parse(make_card(), scraped_at=scraped_at)
     assert offer.source == "other"
+
+
+def test_full_leinster_page_regression(scraped_at: datetime) -> None:
+    """Parses a real saved page. If the site changes, update the fixture AND these numbers."""
+    html = (FIXTURES / "rorys_leinster_page.html").read_text(encoding="utf-8")
+
+    offers = parse(html, scraped_at=scraped_at)
+
+    assert len(offers) == 31
+    assert all(o.name for o in offers)
+    assert all(o.link is not None and o.link.startswith("https://") for o in offers)
+    assert all(o.expiry is not None for o in offers)
+    assert all(o.county for o in offers)
+    assert len({o.link for o in offers}) == 31  # every card links to a distinct page
