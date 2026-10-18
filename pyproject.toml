@@ -38,3 +38,6 @@ testpaths = ["tests"]
 [tool.pyright]
 include = ["src", "tests"]
 typeCheckingMode = "strict"
+
+[project.scripts]
+deal-dashboard = "deal_dashboard.cli:main"
