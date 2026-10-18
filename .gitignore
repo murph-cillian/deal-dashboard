@@ -10,7 +10,6 @@ dist/
 
 # local data (scraped snapshots, databases) - never commit
 data/
-tests/fixtures/
 
 # secrets
 .env
