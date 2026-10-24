@@ -24,3 +24,4 @@ class RawOffer(BaseModel):
     image_urls: tuple[str, ...] = Field(default=(), description="Image URLs shown on the card.")
     scraped_at: datetime = Field(description="When we fetched the page (timezone-aware, UTC).")
     raw_html: str = Field(description="The HTML of this single offer card, kept for re-parsing.")
+    source_offer_id: str | None = Field(default=None, description="The source's own identifier for this listing, if it has one.")

@@ -33,6 +33,7 @@ DESCRIPTION_SELECTOR = '[class*="card-description"]'
 EXPIRY_SELECTOR = "[data-expiry]"
 LINK_SELECTOR = 'a[class*="card-button"]'
 IMAGE_SELECTOR = 'img[class*="card-image"]'
+ID_SELECTOR = "[data-id]"
 # -----------------------------------------------------------------------------
 
 
@@ -103,6 +104,9 @@ class RorysOfferParser:
         expiry_tag = card.select_one(EXPIRY_SELECTOR)
         expiry = _parse_iso_date(_attr(expiry_tag, "data-expiry") if expiry_tag else None)
 
+        id_tag = card.select_one(ID_SELECTOR)
+        source_offer_id = _attr(id_tag, "data-id") if id_tag else None
+
         return RawOffer(
             source=self._source_name,
             name=name,
@@ -113,6 +117,7 @@ class RorysOfferParser:
             image_urls=image_urls,
             scraped_at=scraped_at,
             raw_html=str(card),
+            source_offer_id=source_offer_id,
         )
 
 
