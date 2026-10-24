@@ -119,3 +119,13 @@ def test_full_leinster_page_regression(scraped_at: datetime) -> None:
     assert all(o.expiry is not None for o in offers)
     assert all(o.county for o in offers)
     assert len({o.link for o in offers}) == 31  # every card links to a distinct page
+
+
+def test_offer_id_is_taken_from_data_id(scraped_at: datetime) -> None:
+    (offer,) = parse(make_card(data_id="42"), scraped_at=scraped_at)
+    assert offer.source_offer_id == "42"
+
+
+def test_offer_id_is_none_when_nothing_identifies_the_card(scraped_at: datetime) -> None:
+    (offer,) = parse(make_card(data_id=None, href=None), scraped_at=scraped_at)
+    assert offer.source_offer_id is None
