@@ -26,6 +26,7 @@ def test_parses_real_spencer_card(scraped_at: datetime) -> None:
     assert offer.expiry == date(2026, 12, 13)
     assert offer.scraped_at == scraped_at
     assert "The Spencer Hotel" in offer.raw_html
+    assert offer.source_offer_id == "1928948678924"
 
 
 def test_empty_page_returns_no_offers(scraped_at: datetime) -> None:
@@ -121,11 +122,17 @@ def test_full_leinster_page_regression(scraped_at: datetime) -> None:
     assert len({o.link for o in offers}) == 31  # every card links to a distinct page
 
 
-def test_offer_id_is_taken_from_data_id(scraped_at: datetime) -> None:
-    (offer,) = parse(make_card(data_id="42"), scraped_at=scraped_at)
-    assert offer.source_offer_id == "42"
+def test_card_without_offer_id_is_skipped_and_logged(caplog: pytest.LogCaptureFixture, scraped_at: datetime) -> None:
+    html = make_card(offer_id=None, name="No Id Hotel") + make_card(offer_id="7", name="Good Hotel")
+
+    with caplog.at_level(logging.WARNING):
+        offers = parse(html, scraped_at=scraped_at)
+
+    assert [o.source_offer_id for o in offers] == ["7"]
+    assert "no offer id" in caplog.text
 
 
-def test_offer_id_is_none_when_nothing_identifies_the_card(scraped_at: datetime) -> None:
-    (offer,) = parse(make_card(data_id=None, href=None), scraped_at=scraped_at)
-    assert offer.source_offer_id is None
+def test_missing_expiry_still_parses_offer_id(scraped_at: datetime) -> None:
+    (offer,) = parse(make_card(expiry=None, offer_id="55"), scraped_at=scraped_at)
+    assert offer.source_offer_id == "55"
+    assert offer.expiry is None
