@@ -1,8 +1,20 @@
 """Domain models shared by every stage of the pipeline."""
 
 from datetime import date, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class RunStatus(StrEnum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class OfferStatus(StrEnum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
 
 
 class RawOffer(BaseModel):
@@ -16,6 +28,7 @@ class RawOffer(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     source: str = Field(description="Identifier of the site this came from, e.g. 'rorys'.")
+    source_offer_id: str | None = Field(default=None, description="The source's own identifier for this listing, if it has one.")
     name: str = Field(min_length=1, description="Venue name as displayed.")
     description: str = Field(description="The offer description text as displayed.")
     expiry: date | None = Field(default=None, description="Expiry date as displayed (not parsed).")
@@ -24,4 +37,3 @@ class RawOffer(BaseModel):
     image_urls: tuple[str, ...] = Field(default=(), description="Image URLs shown on the card.")
     scraped_at: datetime = Field(description="When we fetched the page (timezone-aware, UTC).")
     raw_html: str = Field(description="The HTML of this single offer card, kept for re-parsing.")
-    source_offer_id: str | None = Field(default=None, description="The source's own identifier for this listing, if it has one.")

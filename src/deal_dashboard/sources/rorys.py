@@ -106,6 +106,9 @@ class RorysOfferParser:
 
         id_tag = card.select_one(ID_SELECTOR)
         source_offer_id = _attr(id_tag, "data-id") if id_tag else None
+        if not source_offer_id:
+            logger.warning("Skipping card with no offer id: %s", name)
+            return None
 
         return RawOffer(
             source=self._source_name,
